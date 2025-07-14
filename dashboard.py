@@ -88,10 +88,7 @@ if "user" not in st.session_state:
 
     if st.button("Submit"):
         auth_data = {"password": password}
-        if "@" in contact:
-            auth_data["email"] = contact
-        else:
-            auth_data["phone"] = contact
+        auth_data["email"] = contact
 
         try:
             if login_mode == "Login":
