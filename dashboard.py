@@ -73,7 +73,7 @@ st.markdown("""
 # === Login Interface ===
 if "user" not in st.session_state:
     st.markdown(
-    "<h1 style='margin-bottom: 0.5rem;'>Titanic & Master</h1>",
+    "<h1 style='margin-bottom: 4rem;'>Titanic & Master</h1>",
     unsafe_allow_html=True
 )
 
