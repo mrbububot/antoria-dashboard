@@ -89,34 +89,36 @@ if "user" not in st.session_state:
 
     login_mode = st.radio("Action:", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
-    if st.button("Login"):
-        # Determine if input is email or phone
+        if st.button("Login"):
+        # Smartly detect if user entered email or phone
         auth_data = {"password": password}
-        if "@" in contact:
+        if "@" in contact and "." in contact:
             auth_data["email"] = contact
         else:
-            # NOTE: Supabase requires phone auth to be enabled (see warning below)
-            auth_data["phone"] = contact
+            auth_data["phone"] = contact  # Only works if Phone Auth is enabled
 
         try:
+            # Try login first
             user = supabase.auth.sign_in_with_password(auth_data)
-            if user and user.get("user"):
+            if user.get("user"):
                 st.success("✅ Logged in successfully!")
                 st.session_state["user"] = user["user"]
                 st.rerun()
             else:
-                raise Exception("User not found")
+                raise Exception("No user returned")
         except Exception as login_error:
             try:
+                # Try signup if login failed
                 signup = supabase.auth.sign_up(auth_data)
-                if signup and signup.get("user"):
+                if signup.get("user"):
                     st.success("✅ Account created and logged in!")
                     st.session_state["user"] = signup["user"]
                     st.rerun()
                 else:
-                    st.error("❌ Sign-up failed.")
+                    st.error("❌ Sign-up failed. Please check your details.")
             except Exception as signup_error:
-                st.error(f"❌ An error occurred during authentication.")
+                st.error("❌ Authentication failed. Make sure you're using a valid email or phone format.")
+
 
 # === Post-login Tabs ===
 if "user" in st.session_state:
