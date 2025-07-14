@@ -38,7 +38,7 @@ st.markdown("""
     }
     h1 {
         text-align: center;
-        font-size: 10px;
+        font-size: 5px;
         color: #fcd535;
         font-weight: 500;
         margin-bottom: 1rem;
