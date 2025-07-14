@@ -6,9 +6,11 @@ import os
 st.set_page_config(page_title="Antoria Bot", layout="centered")
 
 # === Supabase Setup ===
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# === Supabase Setup ===
+SUPABASE_URL = "https://flxvuyeisrcqvhontjij.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHZ1eWVpc3JjcXZob250amlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjQ5MzcyMCwiZXhwIjoyMDY4MDY5NzIwfQ.0KnxgLse29zDzNaRDLqHvl16vB3kX2hjVmTRujPOLvo"
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 # === Binance-Style CSS ===
 st.markdown("""
