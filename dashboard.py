@@ -72,7 +72,7 @@ st.markdown("""
 
 # === Login Interface ===
 if "user" not in st.session_state:
-    st.markdown("<h1>Antoria Bot</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>Titanic & Master</h1>", unsafe_allow_html=True)
 
     login_as = st.radio("Sign in with:", ["Email", "Phone Number"], horizontal=True, label_visibility="collapsed")
     contact = st.text_input("Email or Phone", placeholder="Enter your email or phone number")
