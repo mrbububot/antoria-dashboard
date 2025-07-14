@@ -109,7 +109,7 @@ if "user" not in st.session_state:
             except Exception:
                 st.error("❌ An error occurred during sign-up.")
 
-        elif action == "Forgot Password":
+       elif login_mode == "Forgot Password":
     try:
         supabase.auth.reset_password_email(contact)
         st.success("📧 A reset link has been sent to your email. Please check your inbox.")
