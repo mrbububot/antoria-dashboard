@@ -5,51 +5,75 @@ import os
 # === Streamlit Config ===
 st.set_page_config(page_title="Antoria Bot", layout="centered")
 
-# === Supabase Setup (embedded directly) ===
+# === Supabase Setup (replace these with .env later) ===
 SUPABASE_URL = "https://flxvuyeisrcqvhontjij.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHZ1eWVpc3JjcXZob250amlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjQ5MzcyMCwiZXhwIjoyMDY4MDY5NzIwfQ.0KnxgLse29zDzNaRDLqHvl16vB3kX2hjVmTRujPOLvo"
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# === Custom Binance-style CSS ===
+# === Binance-Style CSS ===
 st.markdown("""
     <style>
     .block-container {
-        padding-top: 3rem;
-        padding-bottom: 2rem;
+        padding-top: 4rem;
+        max-width: 350px;
+        margin: auto;
+    }
+    h1 {
+        text-align: center;
+        font-size: 20px;
+        color: #fcd535;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    input {
+        font-size: 14px !important;
     }
     .stTextInput > div > input {
-        font-size: 14px !important;
         padding: 10px;
         border-radius: 8px;
     }
     .stButton > button {
         background-color: #fcd535 !important;
         color: black !important;
-        border-radius: 10px;
         font-weight: bold;
+        border-radius: 8px;
         padding: 0.6rem 1.5rem;
-        font-size: 14px !important;
+        width: 100%;
     }
-    h1 {
-        font-size: 16px !important;
-        color: #fcd535;
+    .custom-links {
         text-align: center;
-        margin-bottom: 2rem;
+        margin-top: 1rem;
+        font-size: 13px;
+    }
+    .custom-links a {
+        color: #fcd535;
+        text-decoration: none;
+    }
+    .custom-checkbox {
+        font-size: 13px;
+        margin-top: 0.5rem;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# === Login/Signup Form ===
+# === Login Interface ===
 if "user" not in st.session_state:
-    st.markdown("<h1>🔐 Antoria Bot</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>Antoria Bot</h1>", unsafe_allow_html=True)
 
-    email = st.text_input("Email", placeholder="Enter your email")
+    login_as = st.radio("Sign in with:", ["Email", "Phone Number"], horizontal=True, label_visibility="collapsed")
+    contact = st.text_input("Email or Phone", placeholder="Enter your email or phone number")
     password = st.text_input("Password", type="password", placeholder="Enter your password")
+    show_2fa = st.checkbox("2FA Enabled", value=False)
+    remember_me = st.checkbox("Remember Me", key="remember")
 
-    if st.button("Next"):
-        user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+    if show_2fa:
+        twofa = st.text_input("2FA Code", max_chars=6)
+
+    if st.button("Login"):
+        auth_data = {"email": contact, "password": password}
+        user = supabase.auth.sign_in_with_password(auth_data)
         if not user.get("user"):
-            signup = supabase.auth.sign_up({"email": email, "password": password})
+            signup = supabase.auth.sign_up(auth_data)
             if signup.get("user"):
                 st.success("✅ Account created. You're now logged in!")
                 st.session_state["user"] = signup["user"]
@@ -62,40 +86,38 @@ if "user" not in st.session_state:
             st.rerun()
 
     st.markdown("""
-        <div style='text-align: center; font-size: 13px; margin-top: 10px;'>
-            <a href='#' style='color: #fcd535;'>Forgot password?</a><br>
-            <a href='#' style='color: #fcd535;'>Create Antoria Bot Account</a>
+        <div class="custom-links">
+            <a href="#">Forgot Password?</a><br>
+            <a href="#">Create Antoria Bot Account</a>
         </div>
     """, unsafe_allow_html=True)
 
-# === Logged In Interface ===
+# === Post-login Tabs ===
 if "user" in st.session_state:
     st.success(f"Welcome, {st.session_state['user']['email']} 👋")
 
     tabs = st.tabs(["🏠 Home", "📈 Markets", "🤖 Bot", "👤 Profile"])
 
-    # === Home Tab ===
+    # Home Tab
     with tabs[0]:
-        st.subheader("📊 Antoria Portfolio Summary")
+        st.subheader("📊 Portfolio Summary")
         st.metric("Balance", "£50.00", "+2.5%")
         st.metric("Active Trades", "3 positions")
         st.metric("Today’s P&L", "£3.25")
-        st.write("💡 Your AI Bot is learning and adapting...")
 
-    # === Markets Tab ===
+    # Markets Tab
     with tabs[1]:
         st.subheader("📈 Live Market Prices")
-        st.write("🔄 Coming next: BTC/GBP, ETH/GBP, AAPL, EUR/USD...")
-        st.info("Live price feed in progress...")
+        st.info("Live price feed coming soon...")
 
-    # === Bot Tab ===
+    # Bot Tab
     with tabs[2]:
         st.subheader("🤖 Antoria Bot Settings")
         st.toggle("Enable Auto-Trading", value=True)
         st.selectbox("Risk Level", ["Low", "Medium", "High"])
         st.button("📍 Start Bot")
 
-    # === Profile Tab ===
+    # Profile Tab
     with tabs[3]:
         st.subheader("👤 Account Settings")
         st.write(f"Email: `{st.session_state['user']['email']}`")
