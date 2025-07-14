@@ -18,7 +18,7 @@ def get_base64_image(image_path):
     return base64.b64encode(data).decode()
 
 # === Display centered logo ===
-logo_base64 = get_base64_image("antoria_logo.png")  # Make sure this file exists in same folder
+logo_base64 = get_base64_image("antoria_logo.png")
 st.markdown(
     f"""
     <div style='text-align: center; padding-top: -16rem; margin-bottom: -80px;'>
@@ -73,10 +73,7 @@ st.markdown("""
 
 # === Login Interface ===
 if "user" not in st.session_state:
-    st.markdown(
-        "<h1 style='margin-bottom: -4rem;'>Master & Titanic</h1>",
-        unsafe_allow_html=True
-    )
+    st.markdown("<h1 style='margin-bottom: -4rem;'>Master & Titanic</h1>", unsafe_allow_html=True)
 
     login_as = st.radio("Sign in with:", ["Email", "Phone Number"], horizontal=True, label_visibility="collapsed")
     contact = st.text_input("Email or Phone", placeholder="Enter your email or phone number")
@@ -89,36 +86,41 @@ if "user" not in st.session_state:
 
     login_mode = st.radio("Action:", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
-        if st.button("Login"):
-        # Smartly detect if user entered email or phone
+    if st.button("Submit"):
         auth_data = {"password": password}
-        if "@" in contact and "." in contact:
+        if "@" in contact:
             auth_data["email"] = contact
         else:
-            auth_data["phone"] = contact  # Only works if Phone Auth is enabled
+            auth_data["phone"] = contact
 
         try:
-            # Try login first
-            user = supabase.auth.sign_in_with_password(auth_data)
-            if user.get("user"):
-                st.success("✅ Logged in successfully!")
-                st.session_state["user"] = user["user"]
-                st.rerun()
-            else:
-                raise Exception("No user returned")
-        except Exception as login_error:
-            try:
-                # Try signup if login failed
-                signup = supabase.auth.sign_up(auth_data)
-                if signup.get("user"):
-                    st.success("✅ Account created and logged in!")
-                    st.session_state["user"] = signup["user"]
+            if login_mode == "Login":
+                user = supabase.auth.sign_in_with_password(auth_data)
+                if user.get("user"):
+                    st.success("✅ Logged in successfully!")
+                    st.session_state["user"] = user["user"]
                     st.rerun()
                 else:
-                    st.error("❌ Sign-up failed. Please check your details.")
-            except Exception as signup_error:
-                st.error("❌ Authentication failed. Make sure you're using a valid email or phone format.")
+                    st.error("❌ Login failed. Check your credentials.")
+            elif login_mode == "Sign Up":
+                user = supabase.auth.sign_up(auth_data)
+                if user.get("user"):
+                    st.success("✅ Account created. You are now logged in!")
+                    st.session_state["user"] = user["user"]
+                    st.rerun()
+                else:
+                    st.error("❌ Sign-up failed.")
+            else:
+                st.info("Password reset feature coming soon.")
+        except Exception as e:
+            st.error("❌ An error occurred during authentication.")
 
+    st.markdown("""
+        <div class="custom-links">
+            <a href="#">Forgot Password?</a><br>
+            <a href="#">Create Antoria Bot Account</a>
+        </div>
+    """, unsafe_allow_html=True)
 
 # === Post-login Tabs ===
 if "user" in st.session_state:
