@@ -21,7 +21,7 @@ def get_base64_image(image_path):
 logo_base64 = get_base64_image("antoria_logo.png")  # Make sure this file exists in same folder
 st.markdown(
     f"""
-    <div style='text-align: center; padding-top: -8rem; margin-bottom: -80px;'>
+    <div style='text-align: center; padding-top: -10rem; margin-bottom: -80px;'>
         <img src='data:image/png;base64,{logo_base64}' width='300'>
     </div>
     """,
