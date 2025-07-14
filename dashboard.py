@@ -1,22 +1,23 @@
 import streamlit as st
 from supabase import create_client
+import os
 import base64
 
 # === Streamlit Config ===
 st.set_page_config(page_title="Antoria Bot", layout="centered")
 
-# === Supabase Setup ===
+# === Supabase Setup (you can move this to .env later) ===
 SUPABASE_URL = "https://flxvuyeisrcqvhontjij.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHZ1eWVpc3JjcXZob250amlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjQ5MzcyMCwiZXhwIjoyMDY4MDY5NzIwfQ.0KnxgLse29zDzNaRDLqHvl16vB3kX2hjVmTRujPOLvo"
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# === Logo Loader ===
+# === Load and display logo ===
 def get_base64_image(image_path):
     with open(image_path, "rb") as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
-logo_base64 = get_base64_image("antoria_logo.png")
+logo_base64 = get_base64_image("antoria_logo.png")  # Ensure this exists
 st.markdown(
     f"""
     <div style='text-align: center; padding-top: -16rem; margin-bottom: -80px;'>
@@ -26,7 +27,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# === CSS Styling ===
+# === Custom CSS ===
 st.markdown("""
     <style>
     .block-container {
@@ -64,76 +65,50 @@ st.markdown("""
     .custom-links a {
         color: #fcd535;
         text-decoration: none;
-        cursor: pointer;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# === LOGIN ===
+# === LOGIN UI ===
 if "user" not in st.session_state:
     st.markdown("<h1 style='margin-bottom: -4rem;'>Master & Titanic</h1>", unsafe_allow_html=True)
 
-    login_as = st.radio("Sign in with:", ["Email", "Phone Number"], horizontal=True, label_visibility="collapsed")
-    contact = st.text_input("Email or Phone", placeholder="Enter your email or phone number")
+    email = st.text_input("Email", placeholder="Enter your email")
     password = st.text_input("Password", type="password", placeholder="Enter your password")
     show_2fa = st.checkbox("2FA Enabled", value=False)
     remember_me = st.checkbox("Remember Me", key="remember")
+    mode = st.radio("Action:", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
     if show_2fa:
-        twofa = st.text_input("2FA Code", max_chars=6)
+        st.text_input("2FA Code", max_chars=6)
 
-    login_mode = st.radio("Action:", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
-
-    if login_mode == "Login":
-        if st.button("Login"):
-            auth_data = {"password": password}
-            if "@" in contact and "." in contact:
-                auth_data["email"] = contact
-            else:
-                auth_data["phone"] = contact
-
-            try:
-                user = supabase.auth.sign_in_with_password(auth_data)
+    if st.button("Submit"):
+        try:
+            if mode == "Login":
+                user = supabase.auth.sign_in_with_password({"email": email, "password": password})
                 if user.get("user"):
-                    st.success("✅ Logged in successfully!")
+                    st.success("✅ Logged in!")
                     st.session_state["user"] = user["user"]
                     st.rerun()
                 else:
-                    st.error("❌ Login failed. Check your credentials.")
-            except Exception as e:
-                st.error("❌ An error occurred during authentication.")
-
-    elif login_mode == "Sign Up":
-        if st.button("Sign Up"):
-            auth_data = {"password": password}
-            if "@" in contact and "." in contact:
-                auth_data["email"] = contact
-            else:
-                auth_data["phone"] = contact
-
-            try:
-                signup = supabase.auth.sign_up(auth_data)
+                    st.error("❌ Invalid login credentials.")
+            elif mode == "Sign Up":
+                signup = supabase.auth.sign_up({"email": email, "password": password})
                 if signup.get("user"):
-                    st.success("✅ Account created. You're now logged in!")
+                    st.success("✅ Account created!")
                     st.session_state["user"] = signup["user"]
                     st.rerun()
                 else:
-                    st.error("❌ Sign-up failed. Please try again.")
-            except Exception as e:
-                st.error("❌ Could not sign up. Ensure email/phone is valid.")
+                    st.error("❌ Sign-up failed.")
+            elif mode == "Forgot Password":
+                supabase.auth.reset_password_email(email)
+                st.info("📩 Password reset link sent. Check your inbox.")
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
 
-    elif login_mode == "Forgot Password":
-        if st.button("Reset Password"):
-            try:
-                supabase.auth.reset_password_email(contact)
-                st.success("📧 A reset link has been sent to your email.")
-            except Exception as e:
-                st.error("❌ Could not send reset email. Try again.")
-
-# === DASHBOARD ===
+# === Post-login content ===
 if "user" in st.session_state:
     st.success(f"Welcome, {st.session_state['user']['email']} 👋")
-
     tabs = st.tabs(["🏠 Home", "📈 Markets", "🤖 Bot", "👤 Profile"])
 
     with tabs[0]:
