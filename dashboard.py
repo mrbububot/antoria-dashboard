@@ -110,7 +110,7 @@ if "user" not in st.session_state:
             else:
                 st.info("Password reset feature coming soon.")
         except Exception as e:
-            st.error("❌ An error occurred during authentication.")
+    st.error(f"❌ Supabase Error: {str(e)}")
 
     st.markdown("""
         <div class="custom-links">
