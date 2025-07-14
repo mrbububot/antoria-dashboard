@@ -22,7 +22,7 @@ logo_base64 = get_base64_image("antoria_logo.png")  # Make sure this file exists
 st.markdown(
     f"""
     <div style='text-align: center; padding-top: 1rem;'>
-        <img src='data:image/png;base64,{logo_base64}' width='120'>
+        <img src='data:image/png;base64,{logo_base64}' width='180'>
     </div>
     """,
     unsafe_allow_html=True
