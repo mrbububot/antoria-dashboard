@@ -44,7 +44,7 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     input {
-        font-size: 14px !important;
+        font-size: 10px !important;
     }
     .stTextInput > div > input {
         padding: 10px;
