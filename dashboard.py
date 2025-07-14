@@ -98,6 +98,41 @@ if st.button(login_mode):
         else:
             try:
                 supabase.auth.reset_password_email(contact)
+                st.success("📨 Password reset email sent. Check your inbox.")
+            except Exception:
+                st.error("❌ Failed to send reset email. Please try again.")
+
+    elif login_mode == "Login":
+        if not contact or not password:
+            st.warning("⚠️ Please enter email and password.")
+        else:
+            try:
+                res = supabase.auth.sign_in_with_password({"email": contact, "password": password})
+                st.session_state["user"] = res.user
+                st.success("✅ Logged in successfully!")
+                st.rerun()
+            except Exception as e:
+                st.error("❌ Login failed. Please check your credentials.")
+
+    elif login_mode == "Sign Up":
+        if not contact or not password:
+            st.warning("⚠️ Please enter email and password.")
+        else:
+            try:
+                res = supabase.auth.sign_up({"email": contact, "password": password})
+                st.success("✅ Sign-up successful! Please check your email for confirmation.")
+                st.rerun()
+            except Exception as e:
+                st.error("❌ Sign-up failed. Ensure your email is valid and not already used.")
+
+
+if st.button(login_mode):
+    if login_mode == "Forgot Password":
+        if not contact:
+            st.warning("⚠️ Please enter your email.")
+        else:
+            try:
+                supabase.auth.reset_password_email(contact)
                 st.info("📨 Password reset email sent. Check your inbox.")
             except Exception:
                 st.error("❌ Failed to send reset email. Please try again.")
