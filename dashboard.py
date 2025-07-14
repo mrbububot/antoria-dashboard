@@ -89,34 +89,34 @@ if "user" not in st.session_state:
 
     login_mode = st.radio("Action:", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
-    if st.button(login_mode):
-        auth_data = {"email": contact, "password": password}
+    if st.button("Login"):
+        # Determine if input is email or phone
+        auth_data = {"password": password}
+        if "@" in contact:
+            auth_data["email"] = contact
+        else:
+            # NOTE: Supabase requires phone auth to be enabled (see warning below)
+            auth_data["phone"] = contact
 
         try:
-            if login_mode == "Login":
-                user = supabase.auth.sign_in_with_password(auth_data)
-                if user.get("user"):
-                    st.success("✅ Logged in successfully!")
-                    st.session_state["user"] = user["user"]
+            user = supabase.auth.sign_in_with_password(auth_data)
+            if user and user.get("user"):
+                st.success("✅ Logged in successfully!")
+                st.session_state["user"] = user["user"]
+                st.rerun()
+            else:
+                raise Exception("User not found")
+        except Exception as login_error:
+            try:
+                signup = supabase.auth.sign_up(auth_data)
+                if signup and signup.get("user"):
+                    st.success("✅ Account created and logged in!")
+                    st.session_state["user"] = signup["user"]
                     st.rerun()
                 else:
-                    st.error("❌ Invalid credentials.")
-
-            elif login_mode == "Sign Up":
-                user = supabase.auth.sign_up(auth_data)
-                if user.get("user"):
-                    st.success("✅ Account created. You're now logged in!")
-                    st.session_state["user"] = user["user"]
-                    st.rerun()
-                else:
-                    st.error("❌ Failed to sign up. Email may already exist.")
-
-            elif login_mode == "Forgot Password":
-                supabase.auth.reset_password_email(contact)
-                st.info("📧 Password reset email sent if account exists.")
-
-        except Exception as e:
-            st.error("❌ An error occurred during authentication.")
+                    st.error("❌ Sign-up failed.")
+            except Exception as signup_error:
+                st.error(f"❌ An error occurred during authentication.")
 
 # === Post-login Tabs ===
 if "user" in st.session_state:
