@@ -91,7 +91,33 @@ if "user" not in st.session_state:
     password = st.text_input("Password", type="password", placeholder="Enter your password")
     login_mode = st.radio("Action:", ["Login", "Sign Up", "Forgot Password"], horizontal=True)
 
-        if st.button(login_mode):
+if st.button(login_mode):
+    if login_mode == "Forgot Password":
+        if not contact:
+            st.warning("⚠️ Please enter your email.")
+        else:
+            try:
+                supabase.auth.reset_password_email(contact)
+                st.info("📨 Password reset email sent. Check your inbox.")
+            except Exception:
+                st.error("❌ Failed to send reset email. Please try again.")
+    else:
+        if not contact or not password:
+            st.warning("⚠️ Please enter email and password.")
+        else:
+            try:
+                if login_mode == "Login":
+                    res = supabase.auth.sign_in_with_password({"email": contact, "password": password})
+                    st.session_state["user"] = res.user
+                    st.success("✅ Logged in successfully!")
+                    st.rerun()
+                elif login_mode == "Sign Up":
+                    res = supabase.auth.sign_up({"email": contact, "password": password})
+                    st.success("✅ Sign-up successful. Please check your email to verify.")
+                    st.rerun()
+            except Exception as e:
+                st.error("❌ Could not complete request. Make sure your email is valid.")
+
         if login_mode == "Forgot Password":
             if not email:
                 st.warning("⚠️ Please enter your email.")
