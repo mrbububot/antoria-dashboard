@@ -1,24 +1,22 @@
 import streamlit as st
 from supabase import create_client
 import os
-import pyotp
-import qrcode
-from io import BytesIO
 from PIL import Image
+
+# === Streamlit Config ===
+st.set_page_config(page_title="Antoria Bot", layout="centered")
 
 # === Supabase Setup ===
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# === Streamlit Config ===
-st.set_page_config(page_title="Antoria Bot", layout="centered")
-
 # === Custom Binance-style CSS ===
 st.markdown("""
     <style>
     .block-container {
-        padding-top: 2rem;
+        padding-top: 3rem;
+        padding-bottom: 2rem;
     }
     .stTextInput > div > input {
         font-size: 14px !important;
@@ -38,69 +36,61 @@ st.markdown("""
         text-align: center;
         margin-bottom: 1rem;
     }
-    a {
-        color: #fcd535;
+    .logo-container {
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .links {
+        text-align: center;
         font-size: 12px;
+        margin-top: 0.5rem;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# === Antoria Logo ===
-st.image("/mnt/data/A_digital_vector_logo_design_features_the_brand_A.png, width=80)
-st.markdown("<h1>Antoria Bot</h1>", unsafe_allow_html=True)
+# === Display Logo ===
+logo_path = "A_digital_vector_logo_design_features_the_brand_\"A.png"
+if os.path.exists(logo_path):
+    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+    st.image(logo_path, width=100)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# === Auth + 2FA ===
+# === Login/Signup Form ===
 if "user" not in st.session_state:
+    st.markdown("<h1>Antoria Bot</h1>", unsafe_allow_html=True)
+
     email = st.text_input("Email", placeholder="Enter your email")
-    phone = st.text_input("Phone Number", placeholder="Enter your phone")
-    identifier = st.text_input("Email or Phone", placeholder="Use either to log in")
-    password = st.text_input("Password", type="password", placeholder="Enter password")
-    
-    col1, col2 = st.columns([1, 1])
+    password = st.text_input("Password", type="password", placeholder="Enter your password")
+    remember = st.checkbox("Remember me")
+
+    col1, col2 = st.columns(2)
     with col1:
-        st.markdown("[Forgot Password?](#)")
+        st.markdown('<div class="links"><a href="#">Forgot Password?</a></div>', unsafe_allow_html=True)
     with col2:
-        st.markdown("[Create Antoria Bot Account](#)")
+        st.markdown('<div class="links"><a href="#">Create Account</a></div>', unsafe_allow_html=True)
 
-    if st.button("Log In / Create Account"):
-        auth_user = supabase.auth.sign_in_with_password({"email": identifier, "password": password})
-        if not auth_user.get("user"):
-            new_user = supabase.auth.sign_up({"email": email, "password": password})
-            if new_user.get("user"):
-                st.session_state.user = new_user["user"]
-                st.session_state.verified = False
+    if st.button("Login"):
+        user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        if not user.get("user"):
+            signup = supabase.auth.sign_up({"email": email, "password": password})
+            if signup.get("user"):
+                st.success("✅ Account created. You're now logged in!")
+                st.session_state["user"] = signup["user"]
+                st.rerun()
+            else:
+                st.error("❌ Failed to log in or sign up.")
         else:
-            st.session_state.user = auth_user["user"]
-            st.session_state.verified = False
-        st.rerun()
-
-# === 2FA Setup ===
-if "user" in st.session_state and not st.session_state.get("verified"):
-    user_id = st.session_state.user["id"]
-    totp_secret = pyotp.random_base32()
-    supabase.table("2fa_secrets").upsert({"user_id": user_id, "secret": totp_secret}).execute()
-    
-    otp_uri = pyotp.totp.TOTP(totp_secret).provisioning_uri(name=st.session_state.user["email"], issuer_name="Antoria Bot")
-    qr = qrcode.make(otp_uri)
-    buffer = BytesIO()
-    qr.save(buffer, format="PNG")
-    st.image(buffer.getvalue(), caption="Scan this QR code with Google Authenticator")
-    
-    code = st.text_input("Enter the 6-digit code from your app")
-    if st.button("Verify 2FA"):
-        record = supabase.table("2fa_secrets").select("secret").eq("user_id", user_id).execute()
-        secret = record.data[0]['secret']
-        if pyotp.TOTP(secret).verify(code):
-            st.session_state.verified = True
-            st.success("✅ 2FA Verified!")
+            st.success("✅ Logged in successfully!")
+            st.session_state["user"] = user["user"]
             st.rerun()
-        else:
-            st.error("❌ Invalid code. Please try again.")
 
-# === Dashboard Tabs ===
-if "user" in st.session_state and st.session_state.get("verified"):
+# === Logged In Interface ===
+if "user" in st.session_state:
+    st.success(f"Welcome, {st.session_state['user']['email']} 👋")
+
     tabs = st.tabs(["🏠 Home", "📈 Markets", "🤖 Bot", "👤 Profile"])
 
+    # === Home Tab ===
     with tabs[0]:
         st.subheader("📊 Antoria Portfolio Summary")
         st.metric("Balance", "£50.00", "+2.5%")
@@ -108,20 +98,23 @@ if "user" in st.session_state and st.session_state.get("verified"):
         st.metric("Today’s P&L", "£3.25")
         st.write("💡 Your AI Bot is learning and adapting...")
 
+    # === Markets Tab ===
     with tabs[1]:
         st.subheader("📈 Live Market Prices")
         st.write("🔄 Coming next: BTC/GBP, ETH/GBP, AAPL, EUR/USD...")
         st.info("Live price feed in progress...")
 
+    # === Bot Tab ===
     with tabs[2]:
         st.subheader("🤖 Antoria Bot Settings")
         st.toggle("Enable Auto-Trading", value=True)
         st.selectbox("Risk Level", ["Low", "Medium", "High"])
         st.button("📍 Start Bot")
 
+    # === Profile Tab ===
     with tabs[3]:
         st.subheader("👤 Account Settings")
         st.write(f"Email: `{st.session_state['user']['email']}`")
         if st.button("Sign Out"):
-            del st.session_state.user
+            del st.session_state["user"]
             st.rerun()
