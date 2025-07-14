@@ -110,11 +110,11 @@ if "user" not in st.session_state:
                 st.error("❌ An error occurred during sign-up.")
 
         elif action == "Forgot Password":
-            try:
-                supabase.auth.reset_password_email(contact)
-                st.success("📧 Reset link sent to your email.")
-            except Exception:
-                st.error("❌ Could not send reset email.")
+    try:
+        supabase.auth.reset_password_email(contact)
+        st.success("📧 A reset link has been sent to your email. Please check your inbox.")
+    except Exception:
+        st.error("❌ Could not send reset email.")
 
     st.markdown("""
         <div class="custom-links">
